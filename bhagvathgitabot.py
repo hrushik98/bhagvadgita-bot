@@ -4,6 +4,8 @@ import pinecone
 st.title("Answers to life from the Gita")
 
 st.image("https://i0.wp.com/telugubullet.com/wp-content/uploads/2017/11/3When-Arjuna-questioned-Lor.jpg")
+st.text("             हरे कृष्‍णा, हरे राम|      ")
+
 OPENAI_API_KEY = st.secrets['openai_key']
 openai.api_key = OPENAI_API_KEY
 
@@ -104,4 +106,4 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
         #                             )
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-st.text("हरे कृष्‍णा, हरे राम")
+
