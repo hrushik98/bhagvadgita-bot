@@ -104,5 +104,4 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
         #                             )
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-st.footer("हरे कृष्‍णा, हरे राम")
-st.footer("made with ❤️ by @hrush1k")
+st.text("हरे कृष्‍णा, हरे राम")
