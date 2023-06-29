@@ -28,7 +28,6 @@ pinecone.init(
 )
 index_name = "test"
 
-
 index = pinecone.Index(index_name)
 vectorstore = Pinecone(
     index, embed.embed_query, text_field
