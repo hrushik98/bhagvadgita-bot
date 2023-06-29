@@ -3,6 +3,7 @@ import openai
 import pinecone
 st.title("Answers to life from the Gita")
 
+st.text(" ")
 st.image("https://i0.wp.com/telugubullet.com/wp-content/uploads/2017/11/3When-Arjuna-questioned-Lor.jpg")
 st.text("             हरे कृष्‍णा, हरे राम|      ")
 
