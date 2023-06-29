@@ -2,6 +2,7 @@ import streamlit as st
 import openai 
 import pinecone
 st.title("Answers to life from the Gita")
+st.image("https://i0.wp.com/telugubullet.com/wp-content/uploads/2017/11/3When-Arjuna-questioned-Lor.jpg")
 OPENAI_API_KEY = st.secrets['openai_key']
 openai.api_key = OPENAI_API_KEY
 
