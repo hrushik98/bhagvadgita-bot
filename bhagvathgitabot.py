@@ -82,16 +82,22 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
         message_placeholder.markdown(full_response)
         
         message_placeholder.markdown(full_response)
-        message_placeholder.markdown(f"""
+        st.write(f"""
             Question:{prompt}
 
             Supporting Texts:
             Supporting Text 1: {documents[0].page_content}
+            
             Supporting Text 2: {documents[1].page_content}
+            
             Supporting Text 3: {documents[2].page_content}
+            
             Supporting Text 4: {documents[3].page_content}
+            
             Supporting Text 5: {documents[4].page_content}
+            
             Supporting Text 6: {documents[5].page_content}
+            
             Supporting Text 7: {documents[6].page_content}
             """
                                     )
