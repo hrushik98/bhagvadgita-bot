@@ -62,7 +62,7 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
             Supporting Text 7: {documents[6].page_content}
             """
 
-    system_content = "You are given a question and a pair of supporting passages from the Hindu sacred text BhagvathGita, which you can use as context to answer the question. If you don't know the answer, just say that you don't know. Don't try to make up an answer. Use the supporting text's example and support it with teachings from the answer."
+    system_content = "You are given a question and a pair of supporting passages from the Hindu sacred text BhagvadGita, which you can use as context to answer the question. If you don't know the answer, just say that you don't know. Don't try to make up an answer. Use the supporting text's example and support it with teachings from the answer."
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -82,23 +82,23 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
         message_placeholder.markdown(full_response)
         
         message_placeholder.markdown(full_response)
-        st.write(f"""
-            Question:{prompt}
+        # st.write(f"""
+        #     Question:{prompt}
 
-            Supporting Texts:
-            Supporting Text 1: {documents[0].page_content}
+        #     Supporting Texts:
+        #     Supporting Text 1: {documents[0].page_content}
             
-            Supporting Text 2: {documents[1].page_content}
+        #     Supporting Text 2: {documents[1].page_content}
             
-            Supporting Text 3: {documents[2].page_content}
+        #     Supporting Text 3: {documents[2].page_content}
             
-            Supporting Text 4: {documents[3].page_content}
+        #     Supporting Text 4: {documents[3].page_content}
             
-            Supporting Text 5: {documents[4].page_content}
+        #     Supporting Text 5: {documents[4].page_content}
             
-            Supporting Text 6: {documents[5].page_content}
+        #     Supporting Text 6: {documents[5].page_content}
             
-            Supporting Text 7: {documents[6].page_content}
-            """
+        #     Supporting Text 7: {documents[6].page_content}
+        #     """
                                     )
     st.session_state.messages.append({"role": "assistant", "content": full_response})
