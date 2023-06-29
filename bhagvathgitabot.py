@@ -99,6 +99,6 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
         #     Supporting Text 6: {documents[5].page_content}
             
         #     Supporting Text 7: {documents[6].page_content}
-        #     """
-                                    )
+        # #     """
+        #                             )
     st.session_state.messages.append({"role": "assistant", "content": full_response})
