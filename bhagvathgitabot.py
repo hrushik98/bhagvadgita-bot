@@ -1,7 +1,7 @@
 import streamlit as st
 import openai 
 import pinecone
-st.title("Answers to life from Gita")
+st.title("Answers to life from the Gita")
 OPENAI_API_KEY = st.secrets['openai_key']
 
 index_name = "test" #name of the pinecone index
