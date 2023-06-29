@@ -73,7 +73,7 @@ if prompt := st.chat_input("What is up?"):
         full_response = ""
         for response in openai.ChatCompletion.create(
             model=st.session_state["openai_model"],
-            m1 = [{"role": "system", "content": f"{system_content}"},
+            messages = [{"role": "system", "content": f"{system_content}"},
                 {"role": "assistant", "content": f"{user_content}"}],
             stream=True,
         ):
