@@ -45,7 +45,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("What is up?"):
+if prompt := st.chat_input("How to stay calm under pressure?"):
     documents = vectorstore.similarity_search(
     prompt,  # our search query
     k=7  # return 7 most relevant docs
@@ -83,4 +83,17 @@ if prompt := st.chat_input("What is up?"):
         message_placeholder.markdown(full_response)
         
         message_placeholder.markdown(full_response)
+        message_placeholder.markdown(f"""
+            Question:{prompt}
+
+            Supporting Texts:
+            Supporting Text 1: {documents[0].page_content}
+            Supporting Text 2: {documents[1].page_content}
+            Supporting Text 3: {documents[2].page_content}
+            Supporting Text 4: {documents[3].page_content}
+            Supporting Text 5: {documents[4].page_content}
+            Supporting Text 6: {documents[5].page_content}
+            Supporting Text 7: {documents[6].page_content}
+            """
+                                    )
     st.session_state.messages.append({"role": "assistant", "content": full_response})
