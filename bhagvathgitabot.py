@@ -62,7 +62,7 @@ if prompt := st.chat_input("How to stay calm under pressure?"):
             Supporting Text 7: {documents[6].page_content}
             """
 
-    system_content = "You are given a question and a pair of supporting passages from the Hindu sacred text BhagvadGita, which you can use as context to answer the question. If you don't know the answer, just say that you don't know. Don't try to make up an answer. Use the supporting text's example and support it with teachings from the answer. If you can't find the answer within the supporting texts, you can use your own knowledge of Bhagvad Gita and provide an answer, but please try to keep it in context as much as possible"
+    system_content = "You are given a question and a pair of supporting passages from the Hindu sacred text BhagvadGita, which you can use as context to answer the question. If you don't know the answer, just say that you don't know. Don't try to make up an answer. Use the supporting text's example and support it with teachings from the answer. If you can't find the answer within the supporting texts, you can use your own knowledge of Bhagvad Gita and provide an answer. This is important that we don't leave the user without an answer"
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
