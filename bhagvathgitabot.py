@@ -1,6 +1,7 @@
 import streamlit as st
 import openai 
 import pinecone
+st.title("Answers to life from Gita")
 OPENAI_API_KEY = st.secrets['openai_key']
 
 index_name = "test" #name of the pinecone index
@@ -18,6 +19,12 @@ embed = OpenAIEmbeddings(
     model=model_name,
     openai_api_key= OPENAI_API_KEY
 )
+
+pinecone.init(
+    api_key=PINECONE_API_KEY,  # find at app.pinecone.io
+    environment=PINECONE_API_ENV  # next to api key in console
+)
+index_name = "test"
 
 
 index = pinecone.Index(index_name)
