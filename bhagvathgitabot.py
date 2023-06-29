@@ -3,6 +3,7 @@ import openai
 import pinecone
 st.title("Answers to life from the Gita")
 OPENAI_API_KEY = st.secrets['openai_key']
+openai.api_key = OPENAI_API_KEY
 
 index_name = "test" #name of the pinecone index
 from langchain.vectorstores import Pinecone
