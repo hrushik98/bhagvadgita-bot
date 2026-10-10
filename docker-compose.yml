@@ -1,0 +1,44 @@
+name: gita-guide
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    env_file: apps/api/.env
+    environment:
+      PORT: 5502
+      WEB_ORIGIN: http://localhost:5501
+      DB_PATH: /app/data/gita.db
+      MODEL_CACHE_DIR: /app/.cache/models
+    ports:
+      - "5502:5502"
+    volumes:
+      # The index and the downloaded model live on the host, so they are built once
+      # and shared with `npm run dev`.
+      - ./data:/app/data
+      - ./.cache:/app/.cache
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5502/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      # The first run may build the index and download the model.
+      start_period: 30m
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5502
+    environment:
+      PORT: 5501
+      API_INTERNAL_URL: http://api:5502
+    ports:
+      - "5501:5501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

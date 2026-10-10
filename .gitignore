@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Generated locally by `npm run setup`
+data/gita.db
+data/gita.db-*
+.cache/
+
+# Legacy Streamlit virtualenv
+.venv/

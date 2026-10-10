@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/.env
+**/.env.*
+!**/.env.example
+**/*.tsbuildinfo
+.git
+.github
+.cache
+.venv
+data/gita.db*
+docker-compose.yml
+start.sh

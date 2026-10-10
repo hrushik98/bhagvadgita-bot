@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f5efe3;
+  --paper-raised: #fbf8f1;
+  --paper-sunk: #ede5d6;
+  --ink: #231c16;
+  --ink-soft: #57493d;
+  --ink-faint: #8a7b6c;
+  --rule: #e0d4c0;
+  --rule-strong: #cdbda4;
+  --sindoor: #b23a1c;
+  --sindoor-hover: #962f15;
+  --sindoor-wash: #f3e0d4;
+  --gold: #9c6f22;
+  --grain-opacity: 0.35;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14110e;
+    --paper-raised: #1c1814;
+    --paper-sunk: #100d0b;
+    --ink: #eee5d7;
+    --ink-soft: #bcae9b;
+    --ink-faint: #85786a;
+    --rule: #2c261f;
+    --rule-strong: #3d352c;
+    --sindoor: #e57b55;
+    --sindoor-hover: #f0916d;
+    --sindoor-wash: #34211a;
+    --gold: #d6aa5c;
+    --grain-opacity: 0.18;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-sindoor: var(--sindoor);
+  --color-sindoor-hover: var(--sindoor-hover);
+  --color-sindoor-wash: var(--sindoor-wash);
+  --color-gold: var(--gold);
+  --font-serif: var(--font-newsreader), var(--font-tiro-hindi), Georgia, serif;
+  --font-sans:
+    var(--font-instrument), var(--font-tiro-hindi), system-ui, sans-serif;
+  --font-sanskrit: var(--font-tiro-sanskrit), var(--font-tiro-hindi), serif;
+}
+
+html {
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paper grain. Fixed, and above everything so sticky and translucent
+   surfaces carry the same texture as the page. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--sindoor-wash);
+  color: var(--ink);
+}
+
+/* In the base layer so utilities such as focus-visible:outline-none can override it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--sindoor);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+/* Small caps label used for eyebrows and metadata. */
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Devanagari breaks apart with letter-spacing and has no case. */
+.label:lang(hi),
+.label:lang(sa),
+.label :lang(hi),
+.label :lang(sa) {
+  font-family: var(--font-sanskrit);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Long-form answer text rendered from Markdown. */
+.answer {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.answer > * + * {
+  margin-top: 0.9em;
+}
+.answer ul,
+.answer ol {
+  padding-left: 1.3em;
+}
+.answer ul {
+  list-style: disc;
+}
+.answer ol {
+  list-style: decimal;
+}
+.answer li + li {
+  margin-top: 0.35em;
+}
+.answer li::marker {
+  color: var(--ink-faint);
+}
+.answer strong {
+  font-weight: 600;
+}
+.answer em {
+  font-style: italic;
+}
+.answer blockquote {
+  border-left: 2px solid var(--rule-strong);
+  padding-left: 1em;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.answer code {
+  font-family: var(--font-sans);
+  font-size: 0.9em;
+}
+
+/* Blinking caret at the end of a streaming answer. */
+.answer.streaming > :last-child:not(ul, ol)::after,
+.answer.streaming > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin-left: 0.15em;
+  vertical-align: -0.15em;
+  background: var(--sindoor);
+  opacity: 0.7;
+  animation: caret 1s steps(2, start) infinite;
+}
+
+@keyframes caret {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.breathe {
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .breathe,
+  /* Blinking caret at the end of a streaming answer. */
+  .answer.streaming > :last-child:not(ul, ol)::after,
+  .answer.streaming > :is(ul, ol):last-child > li:last-child::after {
+    animation: none;
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "bhagavad-gita-bot",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "setup": "npm run ingest -w api",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev -w api\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "start": "concurrently -n api,web -c yellow,cyan \"npm run start -w api\" \"npm run start -w web\"",
+    "lint": "biome check",
+    "format": "biome check --write",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "eval": "npm run eval -w api"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "concurrently": "^10.0.6"
+  },
+  "allowScripts": {
+    "onnxruntime-node": false,
+    "protobufjs": false,
+    "fsevents": false
+  }
+}

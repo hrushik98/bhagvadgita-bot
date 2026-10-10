@@ -1,0 +1,116 @@
+[
+  {
+    "question": "How do I work hard without obsessing over the results?",
+    "expected": ["2.47", "2.48", "3.19"]
+  },
+  {
+    "question": "What happens to the soul when someone dies?",
+    "expected": ["2.20", "2.22", "2.13"]
+  },
+  {
+    "question": "I lost my mother last month and I can't stop grieving",
+    "expected": ["2.11", "2.27", "2.13", "2.20"]
+  },
+  {
+    "question": "What are the qualities of a person with steady wisdom?",
+    "expected": ["2.55", "2.56", "2.54", "2.57"]
+  },
+  {
+    "question": "Where does anger come from and how does it destroy us?",
+    "expected": ["2.62", "2.63", "3.37", "16.21"]
+  },
+  {
+    "question": "Why does God take birth on earth again and again?",
+    "expected": ["4.7", "4.8"]
+  },
+  {
+    "question": "Should I follow my own path even if I'm bad at it, or copy someone else who is succeeding?",
+    "expected": ["3.35", "18.47"]
+  },
+  {
+    "question": "My mind is restless and I cannot control it",
+    "expected": ["6.34", "6.35", "6.26"]
+  },
+  { "question": "What are the three gates to hell?", "expected": ["16.21"] },
+  {
+    "question": "What does it mean to surrender completely to God?",
+    "expected": ["18.66", "18.62", "9.34", "18.65"]
+  },
+  {
+    "question": "How should I sit and meditate?",
+    "expected": ["6.11", "6.12", "6.13", "6.10"]
+  },
+  {
+    "question": "Should I see everyone as equal regardless of caste or status?",
+    "expected": ["5.18", "6.29", "6.32"]
+  },
+  {
+    "question": "How much should I eat and sleep to practice yoga?",
+    "expected": ["6.16", "6.17"]
+  },
+  {
+    "question": "Is a simple offering made with love enough for God?",
+    "expected": ["9.26", "9.27"]
+  },
+  {
+    "question": "What did Arjuna see when Krishna showed his cosmic form?",
+    "expected": ["11.12", "11.10", "11.13", "11.16"]
+  },
+  {
+    "question": "What kind of food is pure and healthy?",
+    "expected": ["17.8", "17.9", "17.10"]
+  },
+  {
+    "question": "What qualities make a devotee dear to Krishna?",
+    "expected": ["12.13", "12.14", "12.15", "12.16", "12.17", "12.18", "12.19"]
+  },
+  {
+    "question": "Lust is my biggest enemy, how do I defeat it?",
+    "expected": ["3.37", "3.39", "3.41", "3.43"]
+  },
+  {
+    "question": "How can I be my own best friend instead of my own enemy?",
+    "expected": ["6.5", "6.6"]
+  },
+  {
+    "question": "What is action in inaction?",
+    "expected": ["4.18", "4.16", "4.17"]
+  },
+  {
+    "question": "Can knowledge burn away past karma?",
+    "expected": ["4.37", "4.36", "4.38"]
+  },
+  {
+    "question": "I don't want to fight against my own family",
+    "expected": ["1.28", "1.31", "1.32", "1.45", "2.4", "2.5", "1.37"]
+  },
+  {
+    "question": "Does a person become what they have faith in?",
+    "expected": ["17.3", "7.21"]
+  },
+  {
+    "question": "I worry constantly about my future and my family's security",
+    "expected": ["9.22", "18.66", "2.47", "12.6", "12.7"]
+  },
+  {
+    "question": "What happens to someone who tries spiritual practice but fails?",
+    "expected": ["6.40", "6.41", "6.37", "6.38", "6.43"]
+  },
+  {
+    "question": "मुझे बहुत चिंता होती है भविष्य के बारे में, क्या करूँ?",
+    "expected": ["9.22", "18.66", "2.47", "12.6", "12.7"]
+  },
+  {
+    "question": "गुस्सा कैसे कंट्रोल करें?",
+    "expected": ["2.62", "2.63", "3.37", "16.21", "5.23", "5.26"]
+  },
+  {
+    "question": "mere papa ki death ho gayi, dukh se bahar kaise niklu?",
+    "expected": ["2.11", "2.27", "2.13", "2.20", "2.22"]
+  },
+  { "question": "What does the Gita say in 18.66?", "expected": ["18.66"] },
+  {
+    "question": "How do I stay calm under pressure?",
+    "expected": ["2.48", "2.56", "2.38", "2.14", "2.70", "6.7"]
+  }
+]

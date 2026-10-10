@@ -1,0 +1,32 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.ts",
+    "start": "NODE_ENV=production node src/server.ts",
+    "ingest": "node scripts/ingest.ts",
+    "enrich": "node scripts/enrich.ts",
+    "eval": "node scripts/eval-retrieval.ts",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gita/shared": "*",
+    "@huggingface/transformers": "^4.3.1",
+    "cors": "^2.8.5",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "sqlite-vec": "^0.1.9",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
