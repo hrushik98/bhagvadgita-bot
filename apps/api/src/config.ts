@@ -33,6 +33,20 @@ const ConfigSchema = z.object({
   RETRIEVAL_TOP_K: z.coerce.number().int().min(1).max(20).default(6),
   /** Chat requests allowed per IP per minute. */
   CHAT_RATE_LIMIT: z.coerce.number().int().positive().default(20),
+  /** Translation and read-aloud requests allowed per IP per minute (each). */
+  TOOLS_RATE_LIMIT: z.coerce.number().int().positive().default(30),
+
+  /** English read-aloud. */
+  ELEVENLABS_API_KEY: z.string().default(""),
+  ELEVENLABS_MODEL: z.string().default("eleven_v4"),
+  /** "George", a warm storyteller voice from the ElevenLabs default library. */
+  ELEVENLABS_VOICE_ID: z.string().default("JBFqnCBsd6RMkjVDRZzb"),
+  /** Hindi and Telugu read-aloud. */
+  SARVAM_API_KEY: z.string().default(""),
+  SARVAM_TTS_MODEL: z.string().default("bulbul:v3"),
+  SARVAM_SPEAKER: z.string().default("shubh"),
+  /** Generated audio is cached here so replaying an answer costs nothing. */
+  SPEECH_CACHE_DIR: z.string().default(path.join(REPO_ROOT, ".cache/speech")),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

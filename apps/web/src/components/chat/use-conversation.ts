@@ -1,8 +1,17 @@
 "use client";
 
-import type { ChatMessage, VerseSummary } from "@gita/shared";
+import type {
+  ChatMessage,
+  TranslationTarget,
+  VerseSummary,
+} from "@gita/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChatRequestError, streamChat } from "@/lib/chat-stream";
+import {
+  ApiRequestError,
+  streamChat,
+  streamTranslation,
+} from "@/lib/chat-stream";
+import { stopReadAloud } from "@/lib/read-aloud";
 
 export type AnswerStatus =
   | "searching"
@@ -20,6 +29,13 @@ export interface Turn {
   crisis: boolean;
   status: AnswerStatus;
   error?: string;
+  /** Translations of the answer, kept so switching back and forth is instant. */
+  translations?: Partial<Record<TranslationTarget, string>>;
+  /** Which version of the answer is shown. */
+  view?: "original" | TranslationTarget;
+  /** The translation currently streaming in, if any. */
+  translating?: TranslationTarget;
+  translationError?: string;
 }
 
 const STORAGE_KEY = "gita-guide.conversation.v1";
@@ -29,15 +45,18 @@ function loadTurns(): Turn[] {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     const turns = raw ? (JSON.parse(raw) as Turn[]) : [];
     // A reload mid-answer leaves a turn in progress; treat it as stopped.
-    return turns.map((t) =>
-      ["searching", "thinking", "writing"].includes(t.status)
+    return turns.map((t) => {
+      const turn: Turn = ["searching", "thinking", "writing"].includes(t.status)
         ? {
             ...t,
             status: t.answer ? "stopped" : "error",
             error: t.answer ? undefined : "Interrupted",
           }
-        : t,
-    );
+        : t;
+      return turn.translating
+        ? withoutTranslation(turn, turn.translating)
+        : turn;
+    });
   } catch {
     return [];
   }
@@ -49,6 +68,17 @@ function saveTurns(turns: Turn[]): void {
   } catch {
     // Storage may be unavailable (private mode, quota). The conversation still works.
   }
+}
+
+/** Drops a translation (for example one interrupted half way) and shows the original. */
+function withoutTranslation(turn: Turn, target: TranslationTarget): Turn {
+  const { [target]: _dropped, ...translations } = turn.translations ?? {};
+  return {
+    ...turn,
+    translations,
+    translating: undefined,
+    view: turn.view === target ? "original" : turn.view,
+  };
 }
 
 /** Earlier completed turns as API messages. */
@@ -65,11 +95,16 @@ export function useConversation() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const controller = useRef<AbortController | null>(null);
+  const translators = useRef(new Map<string, AbortController>());
 
   useEffect(() => {
     setTurns(loadTurns());
     setHydrated(true);
-    return () => controller.current?.abort();
+    const running = translators.current;
+    return () => {
+      controller.current?.abort();
+      for (const abort of running.values()) abort.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -135,7 +170,7 @@ export function useConversation() {
           update(turn.id, {
             status: "error",
             error:
-              error instanceof ChatRequestError
+              error instanceof ApiRequestError
                 ? error.message
                 : "Something went wrong. Please try again.",
           });
@@ -183,10 +218,77 @@ export function useConversation() {
     [turns, run],
   );
 
+  const translate = useCallback(
+    async (id: string, target: TranslationTarget) => {
+      const turn = turns.find((t) => t.id === id);
+      if (!turn?.answer) return;
+      if (turn.translations?.[target] && turn.translating !== target) {
+        update(id, { view: target, translationError: undefined });
+        return;
+      }
+      if (turn.translating) return;
+
+      const abort = new AbortController();
+      translators.current.set(id, abort);
+      update(id, (t) => ({
+        view: target,
+        translating: target,
+        translationError: undefined,
+        translations: { ...t.translations, [target]: "" },
+      }));
+      try {
+        for await (const event of streamTranslation(
+          turn.answer,
+          target,
+          abort.signal,
+        )) {
+          if (event.type === "delta") {
+            update(id, (t) => ({
+              translations: {
+                ...t.translations,
+                [target]: (t.translations?.[target] ?? "") + event.text,
+              },
+            }));
+          } else if (event.type === "error") {
+            throw new ApiRequestError(event.message);
+          }
+        }
+        update(id, { translating: undefined });
+      } catch (error) {
+        if (abort.signal.aborted) return;
+        setTurns((all) =>
+          all.map((t) =>
+            t.id === id
+              ? {
+                  ...withoutTranslation(t, target),
+                  translationError:
+                    error instanceof ApiRequestError
+                      ? error.message
+                      : "The translation failed. Please try again.",
+                }
+              : t,
+          ),
+        );
+      } finally {
+        translators.current.delete(id);
+      }
+    },
+    [turns, update],
+  );
+
+  const showOriginal = useCallback(
+    (id: string) =>
+      update(id, { view: "original", translationError: undefined }),
+    [update],
+  );
+
   const stop = useCallback(() => controller.current?.abort(), []);
 
   const reset = useCallback(() => {
     controller.current?.abort();
+    for (const abort of translators.current.values()) abort.abort();
+    translators.current.clear();
+    stopReadAloud();
     setTurns([]);
   }, []);
 
@@ -194,5 +296,15 @@ export function useConversation() {
     ["searching", "thinking", "writing"].includes(t.status),
   );
 
-  return { turns, hydrated, busy, ask, retry, stop, reset };
+  return {
+    turns,
+    hydrated,
+    busy,
+    ask,
+    retry,
+    stop,
+    reset,
+    translate,
+    showOriginal,
+  };
 }

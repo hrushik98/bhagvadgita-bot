@@ -4,6 +4,7 @@ import {
   Newsreader,
   Tiro_Devanagari_Hindi,
   Tiro_Devanagari_Sanskrit,
+  Tiro_Telugu,
 } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -23,6 +24,12 @@ const instrument = Instrument_Sans({
 const tiroSanskrit = Tiro_Devanagari_Sanskrit({
   variable: "--font-tiro-sanskrit",
   subsets: ["devanagari", "latin"],
+  weight: "400",
+});
+
+const tiroTelugu = Tiro_Telugu({
+  variable: "--font-tiro-telugu",
+  subsets: ["telugu"],
   weight: "400",
 });
 
@@ -52,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${instrument.variable} ${tiroSanskrit.variable} ${tiroHindi.variable} h-full antialiased`}
+      className={`${newsreader.variable} ${instrument.variable} ${tiroSanskrit.variable} ${tiroHindi.variable} ${tiroTelugu.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col">
         <SiteHeader />

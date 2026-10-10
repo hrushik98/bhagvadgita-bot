@@ -12,6 +12,7 @@ import type {
   StreamChunk,
 } from "../src/deepseek.ts";
 import type { Embedder } from "../src/embeddings.ts";
+import type { TtsProvider } from "../src/speech.ts";
 
 interface FixtureVerse {
   id: number;
@@ -141,4 +142,23 @@ export async function collect(
   const all: ChatEvent[] = [];
   for await (const event of events) all.push(event);
   return all;
+}
+
+export class FakeTts implements TtsProvider {
+  readonly maxChars: number;
+  readonly calls: string[] = [];
+  readonly id: string;
+  fail = false;
+
+  constructor(id = "fake", maxChars = 1000) {
+    this.id = id;
+    this.maxChars = maxChars;
+  }
+
+  async *stream(text: string): AsyncIterable<Uint8Array> {
+    this.calls.push(text);
+    yield new TextEncoder().encode(`<${text.slice(0, 5)}`);
+    if (this.fail) throw new Error("provider down");
+    yield new TextEncoder().encode(">");
+  }
 }

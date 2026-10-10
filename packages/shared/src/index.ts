@@ -77,3 +77,28 @@ export type ChatEvent =
 export interface ApiError {
   error: string;
 }
+
+export type TranslationTarget = "hindi" | "telugu";
+
+export interface TranslateRequest {
+  text: string;
+  target: TranslationTarget;
+}
+
+/** Server-sent events emitted by POST /translate. */
+export type TranslateEvent =
+  | { type: "delta"; text: string }
+  | { type: "done" }
+  | { type: "error"; message: string };
+
+export type SpeechLanguage = "english" | "hindi" | "telugu";
+
+export interface SpeechRequest {
+  text: string;
+}
+
+export interface SpeechResponse {
+  /** Path of the MP3 on the API, e.g. "/speech/<id>.mp3". */
+  url: string;
+  language: SpeechLanguage;
+}

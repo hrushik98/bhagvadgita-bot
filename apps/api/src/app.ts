@@ -1,19 +1,31 @@
-import type { ApiError, ChatEvent } from "@gita/shared";
+import type {
+  ApiError,
+  ChatEvent,
+  SpeechResponse,
+  TranslateEvent,
+} from "@gita/shared";
 import cors from "cors";
 import express, { type ErrorRequestHandler, type Response } from "express";
 import { rateLimit } from "express-rate-limit";
 import helmet from "helmet";
 import { z } from "zod";
 import type { ChatService } from "./chat.ts";
+import type { LlmClient } from "./deepseek.ts";
 import type { GitaRepository } from "./repository.ts";
 import type { Retriever } from "./retrieval.ts";
+import { type SpeechService, SpeechUnavailableError } from "./speech.ts";
+import { buildTranslationMessages } from "./translate.ts";
 
 export interface AppDependencies {
   repository: GitaRepository;
   retriever: Retriever;
   chat: ChatService;
+  llm: LlmClient;
+  speech: SpeechService;
   allowedOrigins: string[];
   chatRateLimit: number;
+  /** Per-IP limit per minute for translation and read-aloud, each. */
+  toolsRateLimit: number;
   logger?: Pick<Console, "error">;
 }
 
@@ -49,6 +61,17 @@ const ChatBody = z.object({
     }),
 });
 
+const TranslateBody = z.object({
+  text: z.string().trim().min(1).max(8000),
+  target: z.enum(["hindi", "telugu"]),
+});
+const SpeechBody = z.object({
+  text: z.string().trim().min(1).max(8000),
+});
+const SpeechParams = z.object({
+  id: z.string().regex(/^[a-f0-9]{64}$/, "Invalid audio id"),
+});
+
 class HttpError extends Error {
   readonly status: number;
 
@@ -77,7 +100,20 @@ function todayInIndia(): string {
 }
 
 export function createApp(deps: AppDependencies): express.Express {
-  const { repository, retriever, chat, logger = console } = deps;
+  const { repository, retriever, chat, llm, speech, logger = console } = deps;
+  const limit = (perMinute: number, error: string) =>
+    rateLimit({
+      windowMs: 60_000,
+      limit: perMinute,
+      standardHeaders: "draft-8",
+      legacyHeaders: false,
+      message: { error } satisfies ApiError,
+    });
+  const toolsLimit = (name: string) =>
+    limit(
+      deps.toolsRateLimit,
+      `Too many ${name} requests. Please try again in a minute.`,
+    );
   const app = express();
 
   app.disable("x-powered-by");
@@ -123,52 +159,100 @@ export function createApp(deps: AppDependencies): express.Express {
 
   app.post(
     "/chat",
-    rateLimit({
-      windowMs: 60_000,
-      limit: deps.chatRateLimit,
-      standardHeaders: "draft-8",
-      legacyHeaders: false,
-      message: {
-        error:
-          "You're asking quickly. Please take a breath and try again in a minute.",
-      },
-    }),
+    limit(
+      deps.chatRateLimit,
+      "You're asking quickly. Please take a breath and try again in a minute.",
+    ),
     async (req, res) => {
       const { messages } = parse(ChatBody, req.body);
-
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
+      await streamEvents(res, (signal) => chat.answer(messages, signal), {
+        errorMessage:
+          "Something went wrong while preparing your answer. Please try again.",
+        logger,
       });
-      res.flushHeaders();
-
-      const controller = new AbortController();
-      res.on("close", () => {
-        if (!res.writableFinished) controller.abort();
-      });
-      const heartbeat = setInterval(() => res.write(": ping\n\n"), 15_000);
-
-      try {
-        for await (const event of chat.answer(messages, controller.signal)) {
-          sendEvent(res, event);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          logger.error("Chat failed", error);
-          sendEvent(res, {
-            type: "error",
-            message:
-              "Something went wrong while preparing your answer. Please try again.",
-          });
-        }
-      } finally {
-        clearInterval(heartbeat);
-        res.end();
-      }
     },
   );
+
+  app.post("/translate", toolsLimit("translation"), async (req, res) => {
+    const { text, target } = parse(TranslateBody, req.body);
+    async function* translate(
+      signal: AbortSignal,
+    ): AsyncGenerator<TranslateEvent> {
+      const chunks = llm.stream({
+        messages: buildTranslationMessages(text, target),
+        reasoningEffort: "none",
+        maxTokens: 6000,
+        signal,
+      });
+      for await (const chunk of chunks) {
+        if (chunk.type === "content") yield { type: "delta", text: chunk.text };
+      }
+      yield { type: "done" };
+    }
+    await streamEvents(res, translate, {
+      errorMessage: "The translation failed. Please try again.",
+      logger,
+    });
+  });
+
+  app.post("/speech", toolsLimit("read-aloud"), (req, res) => {
+    const { text } = parse(SpeechBody, req.body);
+    try {
+      const { id, language } = speech.prepare(text);
+      res.json({ url: `/speech/${id}.mp3`, language } satisfies SpeechResponse);
+    } catch (error) {
+      if (error instanceof SpeechUnavailableError)
+        throw new HttpError(503, error.message);
+      throw error;
+    }
+  });
+
+  // Serves cached audio with range support, or streams it while it is generated
+  // so playback starts before synthesis finishes.
+  app.get("/speech/:id.mp3", async (req, res) => {
+    const { id } = parse(SpeechParams, req.params);
+    // Audio is fetched by an <audio> element on the web app's origin.
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+
+    const pending = speech.waitForInflight(id);
+    if (pending) await pending.catch(() => {});
+
+    const cached = speech.cachedFile(id);
+    if (cached) {
+      // The cache lives under .cache/, which `send` would otherwise refuse as a dotfile path.
+      res.sendFile(cached, {
+        maxAge: "365d",
+        immutable: true,
+        dotfiles: "allow",
+      });
+      return;
+    }
+    if (!speech.hasJob(id))
+      throw new HttpError(404, "This audio has expired. Please try again.");
+
+    const controller = new AbortController();
+    res.on("close", () => {
+      if (!res.writableFinished) controller.abort();
+    });
+    try {
+      for await (const chunk of speech.generate(id, controller.signal)) {
+        if (!res.headersSent) {
+          res.writeHead(200, {
+            "Content-Type": "audio/mpeg",
+            "Cache-Control": "no-store",
+          });
+        }
+        if (!res.write(chunk))
+          await new Promise((resolve) => res.once("drain", resolve));
+      }
+      res.end();
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      logger.error("Speech synthesis failed", error);
+      if (res.headersSent) res.destroy();
+      else throw new HttpError(502, "Reading aloud failed. Please try again.");
+    }
+  });
 
   app.use((_req, res) => {
     res.status(404).json({ error: "Not found" } satisfies ApiError);
@@ -193,6 +277,39 @@ export function createApp(deps: AppDependencies): express.Express {
   return app;
 }
 
-function sendEvent(res: Response, event: ChatEvent): void {
-  res.write(`data: ${JSON.stringify(event)}\n\n`);
+type StreamEvent = ChatEvent | TranslateEvent;
+
+/** Streams events as server-sent events, stopping the work if the client disconnects. */
+async function streamEvents(
+  res: Response,
+  produce: (signal: AbortSignal) => AsyncIterable<StreamEvent>,
+  options: { errorMessage: string; logger: Pick<Console, "error"> },
+): Promise<void> {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableFinished) controller.abort();
+  });
+  const heartbeat = setInterval(() => res.write(": ping\n\n"), 15_000);
+  const send = (event: StreamEvent) =>
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+
+  try {
+    for await (const event of produce(controller.signal)) send(event);
+  } catch (error) {
+    if (!controller.signal.aborted) {
+      options.logger.error(error);
+      send({ type: "error", message: options.errorMessage });
+    }
+  } finally {
+    clearInterval(heartbeat);
+    res.end();
+  }
 }

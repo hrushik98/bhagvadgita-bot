@@ -19,7 +19,17 @@ const SUGGESTIONS = [
 ];
 
 export function Chat({ welcome }: { welcome: ReactNode }) {
-  const { turns, hydrated, busy, ask, retry, stop, reset } = useConversation();
+  const {
+    turns,
+    hydrated,
+    busy,
+    ask,
+    retry,
+    stop,
+    reset,
+    translate,
+    showOriginal,
+  } = useConversation();
   const [input, setInput] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -121,7 +131,13 @@ export function Chat({ welcome }: { welcome: ReactNode }) {
 
       <div className="flex-1 space-y-14 pt-4 pb-10">
         {turns.map((turn) => (
-          <TurnView key={turn.id} turn={turn} onRetry={() => retry(turn.id)} />
+          <TurnView
+            key={turn.id}
+            turn={turn}
+            onRetry={() => retry(turn.id)}
+            onTranslate={(target) => void translate(turn.id, target)}
+            onShowOriginal={() => showOriginal(turn.id)}
+          />
         ))}
         <div ref={bottom} className="scroll-mb-36" />
       </div>

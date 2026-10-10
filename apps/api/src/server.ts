@@ -7,6 +7,7 @@ import { DeepSeekClient } from "./deepseek.ts";
 import { LocalEmbedder } from "./embeddings.ts";
 import { GitaRepository } from "./repository.ts";
 import { Retriever } from "./retrieval.ts";
+import { ElevenLabsTts, SarvamTts, SpeechService } from "./speech.ts";
 
 const config = loadConfig();
 const db = openDatabase(config.DB_PATH, { readOnly: true });
@@ -30,12 +31,13 @@ console.log(
 
 const repository = new GitaRepository(db);
 const retriever = new Retriever(db, embedder, repository);
+const llm = new DeepSeekClient({
+  apiKey: config.DEEPSEEK_API_KEY,
+  baseUrl: config.DEEPSEEK_BASE_URL,
+  model: config.DEEPSEEK_MODEL,
+});
 const chat = new ChatService({
-  llm: new DeepSeekClient({
-    apiKey: config.DEEPSEEK_API_KEY,
-    baseUrl: config.DEEPSEEK_BASE_URL,
-    model: config.DEEPSEEK_MODEL,
-  }),
+  llm,
   retriever,
   repository,
   topK: config.RETRIEVAL_TOP_K,
@@ -43,10 +45,37 @@ const chat = new ChatService({
   logger: console,
 });
 
+const sarvam = (languageCode: "hi-IN" | "te-IN") =>
+  config.SARVAM_API_KEY
+    ? new SarvamTts({
+        apiKey: config.SARVAM_API_KEY,
+        model: config.SARVAM_TTS_MODEL,
+        speaker: config.SARVAM_SPEAKER,
+        languageCode,
+      })
+    : null;
+const speech = new SpeechService({
+  cacheDir: config.SPEECH_CACHE_DIR,
+  providers: {
+    english: config.ELEVENLABS_API_KEY
+      ? new ElevenLabsTts({
+          apiKey: config.ELEVENLABS_API_KEY,
+          model: config.ELEVENLABS_MODEL,
+          voiceId: config.ELEVENLABS_VOICE_ID,
+        })
+      : null,
+    hindi: sarvam("hi-IN"),
+    telugu: sarvam("te-IN"),
+  },
+});
+
 const app = createApp({
   repository,
   retriever,
   chat,
+  llm,
+  speech,
+  toolsRateLimit: config.TOOLS_RATE_LIMIT,
   allowedOrigins: config.WEB_ORIGIN.split(",").map((o) => o.trim()),
   chatRateLimit: config.CHAT_RATE_LIMIT,
 });

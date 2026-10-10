@@ -49,10 +49,15 @@
   --color-sindoor-hover: var(--sindoor-hover);
   --color-sindoor-wash: var(--sindoor-wash);
   --color-gold: var(--gold);
-  --font-serif: var(--font-newsreader), var(--font-tiro-hindi), Georgia, serif;
+  --font-serif:
+    var(--font-newsreader), var(--font-tiro-hindi), var(--font-tiro-telugu),
+    Georgia, serif;
   --font-sans:
-    var(--font-instrument), var(--font-tiro-hindi), system-ui, sans-serif;
-  --font-sanskrit: var(--font-tiro-sanskrit), var(--font-tiro-hindi), serif;
+    var(--font-instrument), var(--font-tiro-hindi), var(--font-tiro-telugu),
+    system-ui, sans-serif;
+  --font-sanskrit:
+    var(--font-tiro-sanskrit), var(--font-tiro-hindi), var(--font-tiro-telugu),
+    serif;
 }
 
 html {
@@ -213,9 +218,25 @@ body::after {
   display: none;
 }
 
+@keyframes equalizer {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.equalizer {
+  animation: equalizer 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise,
   .breathe,
+  .equalizer,
   /* Blinking caret at the end of a streaming answer. */
   .answer.streaming > :last-child:not(ul, ol)::after,
   .answer.streaming > :is(ul, ol):last-child > li:last-child::after {
