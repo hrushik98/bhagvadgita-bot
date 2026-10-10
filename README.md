@@ -2,14 +2,18 @@
 
 Ask life's questions and get answers grounded in the Bhagavad Gita, with every verse cited.
 
+**Try it live: [gita-guide-azure.vercel.app](https://gita-guide-azure.vercel.app)**
+
 - **Ask**: a chat that retrieves the most relevant verses, streams an answer that cites them inline, and shows each verse on hover.
   It understands follow-up questions and replies in English, Hindi (Devanagari) or Hinglish.
 - **Read**: all 18 chapters and 701 verses in Sanskrit, with transliteration, word meanings, five English and two Hindi translations.
+- **Translate** any answer into Hindi or Telugu, keeping its formatting and verse citations.
+- **Read aloud** any answer, in English (ElevenLabs) or in Hindi and Telugu (Sarvam).
 - **Verse of the day** on the home page.
 - **Care for people in distress**: messages that suggest a crisis get verified helpline numbers next to the answer.
 
-Everything except the language model runs on your machine: the embedding model, the vector index and the database.
-Only the final answer generation (and rewriting follow-up questions for search) calls DeepSeek.
+Retrieval runs on your machine: the embedding model, the vector index and the database.
+Only answer generation, translation and rewriting follow-up questions call DeepSeek, and read-aloud calls ElevenLabs or Sarvam.
 
 ## Quick start
 
@@ -40,6 +44,22 @@ The script checks that Docker is running and that `apps/api/.env` has a `DEEPSEE
 `data/` and `.cache/` are mounted into the API container, so the index and the embedding model are shared with `npm run dev`.
 If `data/gita.db` does not exist yet, the API builds it on first start (this downloads the 1.2 GB model once).
 Running `./start.sh` again rebuilds and restarts the containers with your latest changes.
+
+## Live deployment
+
+| Part | Where it runs |
+| --- | --- |
+| Frontend | Vercel project `gita-guide`, root directory `apps/web`, at [gita-guide-azure.vercel.app](https://gita-guide-azure.vercel.app) |
+| API | Docker (`./start.sh`) on a Mac mini, published at `https://gita-api.hrushik.com` through the Cloudflare tunnel `gita-guide` |
+
+The tunnel runs with its own config, so it never touches other tunnels on the machine:
+
+```sh
+cloudflared tunnel --config ~/.cloudflared/gita-guide.yml run
+```
+
+The frontend's `NEXT_PUBLIC_API_URL` Vercel variable is `https://gita-api.hrushik.com`, and the API's allowed origins come from `WEB_ORIGIN` in the root `.env` read by Docker Compose (for example `WEB_ORIGIN=http://localhost:5501,https://gita-guide-azure.vercel.app`).
+Redeploy the frontend with `vercel deploy --prod` from the repo root.
 
 ## How it works
 
@@ -93,6 +113,9 @@ Measure with `npm run eval` before changing retrieval.
 | `GET` | `/verse-of-the-day?date=YYYY-MM-DD` | A stable verse for the day (India time by default) |
 | `GET` | `/search?q=...&limit=8` | Hybrid verse search |
 | `POST` | `/chat` | `{ messages: [{ role, content }] }`, answered as a server-sent event stream |
+| `POST` | `/translate` | `{ text, target: "hindi" \| "telugu" }`, answered as a server-sent event stream |
+| `POST` | `/speech` | `{ text }`, returns `{ url, language }` for the audio |
+| `GET` | `/speech/:id.mp3` | The audio, streamed while it is generated and cached on disk afterwards |
 
 ## Configuration
 
@@ -106,6 +129,10 @@ The most useful ones:
 | `EMBEDDING_DTYPE` | `fp32` | `q8` or `q4` use less memory; run `npm run setup` after changing |
 | `RETRIEVAL_TOP_K` | `6` | Verses given to the model per answer |
 | `CHAT_RATE_LIMIT` | `20` | Chat requests per IP per minute |
+| `ELEVENLABS_API_KEY` | | English read-aloud |
+| `SARVAM_API_KEY` | | Hindi and Telugu read-aloud |
+| `ELEVENLABS_VOICE_ID` | `JBFqnCBsd6RMkjVDRZzb` | George, a warm storyteller voice |
+| `TOOLS_RATE_LIMIT` | `30` | Translation and read-aloud requests per IP per minute |
 
 The web app reads `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`).
 
