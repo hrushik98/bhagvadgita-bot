@@ -8,7 +8,8 @@ services:
     env_file: apps/api/.env
     environment:
       PORT: 5502
-      WEB_ORIGIN: http://localhost:5501
+      # Extra origins (for example a Vercel deployment) can be added in a root .env file.
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5501}
       DB_PATH: /app/data/gita.db
       MODEL_CACHE_DIR: /app/.cache/models
     ports:

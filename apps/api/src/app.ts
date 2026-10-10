@@ -117,7 +117,10 @@ export function createApp(deps: AppDependencies): express.Express {
   const app = express();
 
   app.disable("x-powered-by");
-  app.set("trust proxy", "loopback");
+  // Requests arrive through local proxies: Docker's port mapping and the
+  // Cloudflare tunnel. Trusting only local addresses lets req.ip (and so the
+  // rate limits) use the real client IP from X-Forwarded-For.
+  app.set("trust proxy", ["loopback", "uniquelocal"]);
   app.use(helmet());
   app.use(cors({ origin: deps.allowedOrigins }));
   app.use(express.json({ limit: "200kb" }));
